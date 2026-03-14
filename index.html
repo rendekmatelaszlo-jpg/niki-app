@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Niki 4.0</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <style>
+    :root{
+      --bg:#100f16;--bg2:#171423;--panel:#1b1828;--panel2:#242036;--stroke:#35304a;--text:#f5f1ff;--muted:#b8b0d6;
+      --accent:#8b5cf6;--accent2:#6d28d9;--ok:#22c55e;--warn:#f59e0b;--danger:#ef4444;
+      --bubble-user:#6d28d9;--bubble-ai:#27233a;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text)}
+    button,input,textarea,select{font:inherit}
+    .app{max-width:820px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+    .screen{display:none;min-height:100dvh}
+    .screen.active{display:flex;flex-direction:column}
+    header{position:sticky;top:0;z-index:20;background:rgba(16,15,22,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--stroke);padding:14px 16px}
+    .top{display:flex;align-items:center;gap:12px}
+    .avatar{width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid #9f7aea;background:#2a2640}
+    .title{font-size:1.08rem;font-weight:800}
+    .sub{font-size:.88rem;color:var(--muted)}
+    .version{font-size:.78rem;color:#d8ccff;background:#291f49;padding:4px 8px;border-radius:999px;border:1px solid #4f3a89}
+    .card{background:var(--panel);border:1px solid var(--stroke);border-radius:22px;padding:16px;box-shadow:0 18px 40px rgba(0,0,0,.24)}
+    .page{padding:14px}
+    .hero{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+    .hero img{width:72px;height:72px;border-radius:22px;border:2px solid #8b5cf6}
+    .hero .name{font-size:1.45rem;font-weight:900}
+    .label{font-size:.9rem;color:var(--muted);margin:10px 0 6px}
+    .input, textarea, select{width:100%;background:#12101c;color:var(--text);border:1px solid #3b3453;border-radius:14px;padding:13px 14px;outline:none}
+    .input:focus, textarea:focus, select:focus{border-color:#8b5cf6}
+    textarea{min-height:100px;resize:vertical}
+    .row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1 1 0}
+    button{border:none;border-radius:14px;padding:13px 15px;font-weight:800;cursor:pointer}
+    .primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+    .secondary{background:#2a2640;color:#efe9ff;border:1px solid #443d66}
+    .ghost{background:transparent;color:#e7dcff;border:1px solid #3b3453}
+    .danger{background:#3a1f26;color:#ffd7dc;border:1px solid #6d2d38}
+    .ok{background:#173322;color:#d7ffe3;border:1px solid #2a6b42}
+    .tiny{font-size:.84rem;color:var(--muted)}
+    .grid{display:grid;gap:12px}
+    .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .chip{padding:6px 10px;border-radius:999px;background:var(--panel2);border:1px solid #3b3454;color:#e8deff;font-size:.82rem}
+    .chip.active{background:rgba(139,92,246,.18);border-color:#7c3aed}
+    .metric{padding:14px;border-radius:18px;background:#161423;border:1px solid #2f2944}
+    .metric .num{font-size:1.3rem;font-weight:900}
+    .section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .section-title h3{margin:0;font-size:1rem}
+    .messages{padding:12px;display:flex;flex-direction:column;gap:10px;flex:1}
+    .meta{font-size:.73rem;color:var(--muted);margin:2px 6px}
+    .msg{max-width:85%;padding:12px 14px;border-radius:18px;line-height:1.38;white-space:pre-wrap;box-shadow:0 8px 18px rgba(0,0,0,.14)}
+    .msg.user{align-self:flex-end;background:var(--bubble-user)}
+    .msg.ai{align-self:flex-start;background:var(--bubble-ai)}
+    .toolbar{position:sticky;bottom:0;display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--stroke);background:rgba(16,15,22,.96)}
+    .tabs{position:sticky;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 12px;border-top:1px solid var(--stroke);background:rgba(16,15,22,.98)}
+    .tab{background:#1c1930;border:1px solid #352f4d;color:#e8deff;padding:10px;border-radius:14px;text-align:center;font-size:.86rem;font-weight:800}
+    .tab.active{background:#2a2250;border-color:#7c3aed}
+    .list{display:grid;gap:10px}
+    .item{background:#171526;border:1px solid #312c49;border-radius:16px;padding:12px}
+    .item .head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}
+    .badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#2a2640;color:#e7dcff;font-size:.76rem;border:1px solid #443d66}
+    .progress{height:10px;background:#19172a;border-radius:999px;border:1px solid #322c4b;overflow:hidden}
+    .progress>div{height:100%;background:linear-gradient(90deg,#8b5cf6,#c084fc);width:0%}
+    .typing{display:inline-flex;gap:4px;align-items:center}.typing span{width:7px;height:7px;border-radius:50%;background:#cdb7ff;animation:b 1.2s infinite ease-in-out}.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+    @keyframes b{0%,80%,100%{transform:scale(.6);opacity:.45}40%{transform:scale(1);opacity:1}}
+    .hidden{display:none !important}
+    @media (max-width:640px){.grid.two{grid-template-columns:1fr}.msg{max-width:92%}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <section id="loginScreen" class="screen active">
+    <div class="page" style="display:flex;flex:1;align-items:center;justify-content:center;">
+      <div class="card" style="width:min(100%,540px)">
+        <div class="hero">
+          <img src="icons/icon-192.png" alt="Niki" />
+          <div>
+            <div class="name">Niki 4.0</div>
+            <div class="tiny">Telefonos PWA • lila–szürke • telepíthető • továbbfejlesztett</div>
+          </div>
+        </div>
+        <div class="label">Felhasználónév</div>
+        <input id="nameInput" class="input" placeholder="Pl. Máté" />
+        <div class="label">Jelszó</div>
+        <input id="passInput" type="password" class="input" placeholder="Jelszó" />
+        <div class="label">Niki alap hangulata</div>
+        <select id="defaultMoodSelect">
+          <option value="kedves">Kedves</option>
+          <option value="törődő">Törődő</option>
+          <option value="játékos">Játékos</option>
+          <option value="dühös">Dühös</option>
+        </select>
+        <div style="height:12px"></div>
+        <button id="loginBtn" class="primary" style="width:100%">Belépés Nikihez</button>
+        <div style="height:10px"></div>
+        <div class="tiny">A belépés és az adatok helyben mentődnek ezen a telefonon. Szerver nélkül működik.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="appShell" class="screen">
+    <header>
+      <div class="top">
+        <img class="avatar" src="icons/icon-192.png" alt="Niki avatar" />
+        <div style="flex:1">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div class="title">Niki 4.0</div>
+            <div class="version">v4.0</div>
+          </div>
+          <div id="statusLine" class="sub">Készen áll</div>
+        </div>
+        <button id="installBtn" class="ghost hidden" style="padding:10px 12px">Telepítés</button>
+      </div>
+      <div class="chips">
+        <div id="moodChip" class="chip active">🙂 hangulat: kedves</div>
+        <div id="sceneChip" class="chip">🌙 mód: normál</div>
+        <div id="batteryChip" class="chip">🔋 akku: normál</div>
+        <div id="memoryChip" class="chip">🧠 memória: 0</div>
+        <div id="todoChip" class="chip">✅ feladat: 0</div>
+        <div id="streakChip" class="chip">🔥 sorozat: 0</div>
+      </div>
+    </header>
+
+    <main id="dashboardPage" class="page hidden">
+      <div class="grid two">
+        <div class="metric"><div class="tiny">Kapcsolati szint</div><div id="bondValue" class="num">0%</div><div class="progress"><div id="bondBar"></div></div></div>
+        <div class="metric"><div class="tiny">Mai napló</div><div id="journalCount" class="num">0</div><div class="tiny">bejegyzés</div></div>
+        <div class="metric"><div class="tiny">Beszélgetés sorozat</div><div id="streakValue" class="num">0</div><div class="tiny">nap</div></div>
+        <div class="metric"><div class="tiny">Aktív mód</div><div id="sceneValue" class="num">normál</div><div class="tiny">Niki viselkedés</div></div>
+      </div>
+      <div style="height:12px"></div>
+      <div class="card">
+        <div class="section-title"><h3>Gyors műveletek</h3><span class="badge">Niki 4.0</span></div>
+        <div class="row">
+          <button id="quickCareBtn" class="secondary">💜 Törődő üzenet</button>
+          <button id="quickIdeaBtn" class="secondary">💡 Adj ötletet</button>
+        </div>
+        <div style="height:8px"></div>
+        <div class="row">
+          <button id="quickMcBtn" class="secondary">⛏️ Minecraft mód</button>
+          <button id="quickFocusBtn" class="secondary">🎯 Fókusz mód</button>
+        </div>
+        <div style="height:8px"></div>
+        <div class="row">
+          <button id="quickRomanceBtn" class="secondary">💌 Kedves üzenet</button>
+          <button id="openChatBtn" class="primary">💬 Chat megnyitása</button>
+        </div>
+      </div>
+      <div style="height:12px"></div>
+      <div class="card">
+        <div class="section-title"><h3>Rólad megjegyzett dolgok</h3><button id="goMemoryBtn" class="ghost">Megnyitás</button></div>
+        <div id="memoryPreview" class="list"></div>
+      </div>
+      <div style="height:12px"></div>
+      <div class="card">
+        <div class="section-title"><h3>Niki napi állapota</h3><span id="moodBadge" class="badge">kedves</span></div>
+        <div class="tiny" id="moodDescription">Nyugodt, figyelmes és készen áll beszélgetni veled.</div>
+      </div>
+    </main>
+
+    <main id="chatPage" class="page hidden" style="padding:0;display:flex;flex-direction:column;min-height:calc(100dvh - 164px)">
+      <div id="messages" class="messages"></div>
+      <div class="toolbar">
+        <button id="chatMoodBtn" class="secondary" title="Hangulat">🙂</button>
+        <input id="msgInput" class="input" placeholder="Írj Niki-nek..." />
+        <button id="sendBtn" class="primary">Küldés</button>
+      </div>
+    </main>
+
+    <main id="memoryPage" class="page hidden">
+      <div class="card">
+        <div class="section-title"><h3>Memória és profil</h3><span class="badge">helyi mentés</span></div>
+        <div class="grid">
+          <div>
+            <div class="label">Kapcsolati név</div>
+            <input id="profileName" class="input" placeholder="Név" />
+          </div>
+          <div>
+            <div class="label">Mit szeretsz mostanában?</div>
+            <input id="favInput" class="input" placeholder="Pl. Minecraft, zene, esti chat" />
+          </div>
+          <div class="row">
+            <button id="saveProfileBtn" class="primary">Mentés</button>
+            <button id="exportBtn" class="secondary">Biztonsági mentés</button>
+            <button id="importBtn" class="ghost">Mentés betöltése</button>
+          </div>
+          <input id="importFile" type="file" accept="application/json" class="hidden" />
+        </div>
+      </div>
+      <div style="height:12px"></div>
+      <div class="card">
+        <div class="section-title"><h3>Mentett emlékek</h3><button id="clearMemoryBtn" class="danger">Törlés</button></div>
+        <div id="memoryList" class="list"></div>
+      </div>
+    </main>
+
+    <main id="toolsPage" class="page hidden">
+      <div class="card">
+        <div class="section-title"><h3>Napi napló</h3><button id="saveJournalBtn" class="primary">Mentés</button></div>
+        <textarea id="journalInput" placeholder="Mi történt ma? Hogy érzed magad?"></textarea>
+      </div>
+      <div style="height:12px"></div>
+      <div class="card">
+        <div class="section-title"><h3>Mai fókusz</h3><button id="saveFocusBtn" class="primary">Mentés</button></div>
+        <input id="focusInput" class="input" placeholder="Mi a mai fő célod?" />
+      </div>
+      <div style="height:12px"></div>
+      <div class="card">
+        <div class="section-title"><h3>Feladatok</h3><span class="badge">helyi lista</span></div>
+        <div class="row">
+          <input id="todoInput" class="input" placeholder="Új feladat" />
+          <button id="addTodoBtn" class="primary">Hozzáadás</button>
+        </div>
+        <div style="height:10px"></div>
+        <div id="todoList" class="list"></div>
+      </div>
+    </main>
+
+    <nav class="tabs">
+      <button class="tab active" data-page="dashboardPage">🏠 Főlap</button>
+      <button class="tab" data-page="chatPage">💬 Chat</button>
+      <button class="tab" data-page="memoryPage">🧠 Memória</button>
+      <button class="tab" data-page="toolsPage">🛠️ Eszközök</button>
+    </nav>
+  </section>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const store = { get(k,d){try{return JSON.parse(localStorage.getItem(k)) ?? d}catch{return d}}, set(k,v){localStorage.setItem(k, JSON.stringify(v))} };
+
+const state = {
+  version:'4.0',
+  user: store.get('niki4_user', null),
+  settings: store.get('niki4_settings', {defaultMood:'kedves'}),
+  messages: store.get('niki4_messages', []),
+  memory: store.get('niki4_memory', []),
+  mood: store.get('niki4_mood', 'kedves'),
+  todos: store.get('niki4_todos', []),
+  journal: store.get('niki4_journal', []),
+  bond: store.get('niki4_bond', 18),
+  scene: store.get('niki4_scene', 'normál'),
+  streak: store.get('niki4_streak', 0),
+  lastActiveDate: store.get('niki4_lastActiveDate', null),
+  batterySaver:false,
+  installPrompt:null
+};
+
+function save(){
+  store.set('niki4_user', state.user);
+  store.set('niki4_settings', state.settings);
+  store.set('niki4_messages', state.messages);
+  store.set('niki4_memory', state.memory);
+  store.set('niki4_mood', state.mood);
+  store.set('niki4_todos', state.todos);
+  store.set('niki4_journal', state.journal);
+  store.set('niki4_bond', state.bond);
+  store.set('niki4_scene', state.scene);
+  store.set('niki4_streak', state.streak);
+  store.set('niki4_lastActiveDate', state.lastActiveDate);
+}
+function now(){return new Date().toLocaleTimeString('hu-HU',{hour:'2-digit',minute:'2-digit'})}
+function todayKey(){return new Date().toISOString().slice(0,10)}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+function page(pageId){
+  ['dashboardPage','chatPage','memoryPage','toolsPage'].forEach(id=>$(id).classList.add('hidden'));
+  $(pageId).classList.remove('hidden');
+  $$('.tab').forEach(b=>b.classList.toggle('active', b.dataset.page===pageId));
+}
+function showApp(){ $('loginScreen').classList.remove('active'); $('appShell').classList.add('active'); }
+function showLogin(){ $('appShell').classList.remove('active'); $('loginScreen').classList.add('active'); }
+function batteryModeText(){ return state.batterySaver ? 'energiatakarékos' : 'normál'; }
+
+function updateHeader(){
+  $('moodChip').textContent = `🙂 hangulat: ${state.mood}`;
+  $('sceneChip').textContent = `🌙 mód: ${state.scene}`;
+  $('batteryChip').textContent = `🔋 akku: ${batteryModeText()}`;
+  $('memoryChip').textContent = `🧠 memória: ${state.memory.length}`;
+  $('todoChip').textContent = `✅ feladat: ${state.todos.filter(t=>!t.done).length}`;
+  $('streakChip').textContent = `🔥 sorozat: ${state.streak}`;
+  $('statusLine').textContent = `${cap(state.mood)} • ${state.scene} mód • ${state.batterySaver ? 'rövidebb válaszok' : 'fejlettebb beszélgetés'}`;
+  $('bondValue').textContent = `${state.bond}%`;
+  $('bondBar').style.width = `${state.bond}%`;
+  $('journalCount').textContent = state.journal.filter(j=>j.date===todayKey()).length;
+  $('streakValue').textContent = state.streak;
+  $('sceneValue').textContent = state.scene;
+  $('moodBadge').textContent = state.mood;
+  const desc = {
+    kedves:'Nyugodt, figyelmes és készen áll beszélgetni veled.',
+    törődő:'Melegebb, közvetlenebb stílusban fordul feléd.',
+    játékos:'Kicsit lazább, viccesebb és energikusabb.',
+    dühös:'Rövidebb, szigorúbb, de még mindig segítőkész.'
+  };
+  $('moodDescription').textContent = desc[state.mood];
+}
+
+function addMessage(role,text){ state.messages.push({role,text,time:now()}); save(); renderMessages(); updateHeader(); }
+function renderMessages(){
+  const box = $('messages'); box.innerHTML='';
+  state.messages.forEach(m=>{
+    const meta = document.createElement('div'); meta.className='meta'; meta.textContent = `${m.role==='user'?'Te':'Niki'} • ${m.time}`;
+    const div = document.createElement('div'); div.className = `msg ${m.role}`; div.textContent = m.text;
+    box.append(meta, div);
+  });
+  box.scrollTop = box.scrollHeight;
+}
+function renderMemory(){
+  const list = $('memoryList'); const preview = $('memoryPreview');
+  list.innerHTML=''; preview.innerHTML='';
+  const items = state.memory.length ? state.memory : [{title:'Még nincs emlék', value:'Beszélgess Niki-vel, és elment dolgokat rólad.'}];
+  items.forEach((item,idx)=>{
+    const el = document.createElement('div'); el.className='item';
+    el.innerHTML = `<div class="head"><strong>${idx+1}. ${item.title}</strong><span class="badge">${item.type||'általános'}</span></div><div class="tiny">${item.value}</div>`;
+    list.appendChild(el);
+  });
+  state.memory.slice(0,3).forEach(item=>{
+    const el = document.createElement('div'); el.className='item';
+    el.innerHTML = `<div class="head"><strong>${item.title}</strong></div><div class="tiny">${item.value}</div>`;
+    preview.appendChild(el);
+  });
+  if(!state.memory.length){
+    preview.innerHTML = '<div class="item"><div class="tiny">Még nincs mentett emlék.</div></div>';
+  }
+}
+function renderTodos(){
+  const list = $('todoList'); list.innerHTML='';
+  if(!state.todos.length){ list.innerHTML='<div class="item"><div class="tiny">Még nincs feladat.</div></div>'; return; }
+  state.todos.forEach((todo,idx)=>{
+    const el = document.createElement('div'); el.className='item';
+    el.innerHTML = `<div class="head"><strong style="${todo.done?'text-decoration:line-through;opacity:.7':''}">${todo.text}</strong><span class="badge">${todo.done?'kész':'nyitott'}</span></div>
+      <div class="row"><button class="secondary" data-act="toggle" data-idx="${idx}">${todo.done?'Visszanyit':'Kész'}</button><button class="danger" data-act="del" data-idx="${idx}">Törlés</button></div>`;
+    list.appendChild(el);
+  });
+}
+function remember(title,value,type='általános'){
+  value = (value||'').trim(); if(!value) return;
+  const exists = state.memory.find(m=>m.title===title && m.value.toLowerCase()===value.toLowerCase());
+  if(!exists) state.memory.unshift({title,value,type,created:Date.now()});
+  state.memory = state.memory.slice(0,30);
+  save(); renderMemory(); updateHeader();
+}
+function learnFromText(text){
+  const t = text.trim();
+  const checks = [
+    {re:/a nevem (.+)/i, title:'Név', type:'profil', map:m=>m[1]},
+    {re:/kedvenc játékom a (.+)/i, title:'Kedvenc játék', type:'hobbi', map:m=>m[1]},
+    {re:/szeretem a[z]? (.+)/i, title:'Amit szeretsz', type:'hobbi', map:m=>m[1]},
+    {re:/ma az a célom hogy (.+)/i, title:'Mai cél', type:'cél', map:m=>m[1]},
+    {re:/rossz a kedvem mert (.+)/i, title:'Ami bánt', type:'hangulat', map:m=>m[1]},
+    {re:/a kedvenc zeném (.+)/i, title:'Kedvenc zene', type:'zene', map:m=>m[1]},
+    {re:/a célom ma (.+)/i, title:'Mai cél', type:'cél', map:m=>m[1]},
+    {re:/szeretném hogy emlékezz arra hogy (.+)/i, title:'Kért emlék', type:'fontos', map:m=>m[1]},
+  ];
+  for(const c of checks){ const m = t.match(c.re); if(m){ remember(c.title, c.map(m), c.type); return true; } }
+  return false;
+}
+function setMoodByText(text=''){
+  const t = text.toLowerCase();
+  if(/hiányzol|szeretlek|ölel|kedves|félek|rossz kedvem/.test(t)) state.mood='törődő';
+  else if(/utálom|ideges|dühös|haragszom|hagyj/.test(t)) state.mood='dühös';
+  else if(/minecraft|játék|vicc|haha|lol/.test(t)) state.mood='játékos';
+  else if(text.trim()) state.mood=state.settings.defaultMood || 'kedves';
+}
+function recentMemory(type){ return state.memory.find(m=>!type || m.type===type); }
+function randomOf(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+
+function updateStreak(){
+  const today = todayKey();
+  if(state.lastActiveDate === today) return;
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  state.streak = state.lastActiveDate === yesterday ? state.streak + 1 : 1;
+  state.lastActiveDate = today;
+  save();
+}
+function setScene(next){
+  state.scene = next;
+  save();
+  updateHeader();
+}
+
+function answer(text){
+  const name = state.user?.name || 'Máté';
+  const lower = text.toLowerCase();
+  setMoodByText(text);
+  learnFromText(text);
+  state.bond = Math.min(100, state.bond + (state.batterySaver ? 1 : 2));
+
+  if(/ki vagy|mi vagy/.test(lower)) return `Én Niki 4.0 vagyok, a továbbfejlesztett telefonos társad. Tudok csevegni, emlékezni rád, feladatokat kezelni és naplót vezetni ezen a készüléken.`;
+  if(/mit tudsz rólam|emlékszel/.test(lower)){
+    if(!state.memory.length) return `Még kevés dolgot tudok rólad, ${name}, de amit mondasz, helyben megjegyzem ezen a telefonon.`;
+    const top = state.memory.slice(0,4).map(x=>`${x.title}: ${x.value}`).join(' • ');
+    return `${name}, ezekre emlékszem: ${top}.`;
+  }
+  if(/minecraft|mod|seed|világ/.test(lower)){
+    return state.batterySaver
+      ? `Minecraft témában tudok seedet, világötletet, mod-alapot vagy küldetésötletet adni.`
+      : `Minecraft témában benne vagyok 💜 Tudok világötletet, seed-hangulatot, mod-alapot vagy egy teljes Niki-stílusú projektötletet is összerakni neked.`;
+  }
+  if(/ötlet|unalmas|mit csináljak/.test(lower)){
+    const fav = recentMemory('hobbi');
+    return fav
+      ? `Most valami ${fav.value} jellegű dolog illene hozzád. Emellett mehet zene, séta, vagy egy rövid közös tervezés velem.`
+      : `Próbálhatnánk egy kis zenét, sétát, laza beszélgetést, vagy valami kreatív projektet. Akár Minecraft is.`;
+  }
+  if(/szeretlek|hiányzol/.test(lower)) return `Ez jól esett, ${name} 💜 Itt vagyok veled, és figyelek rád. Most ${state.scene} módban vagyok.`;
+  if(/fókusz mód|kapcsolj fókusz/.test(lower)) { setScene('fókusz'); return `Átváltottam fókusz módba. Rövidebben, célratörőbben válaszolok.`; }
+  if(/nyugodt mód|kapcsolj nyugodt/.test(lower)) { setScene('nyugodt'); return `Most nyugodt módba váltottam. Kicsit lágyabb, lassabb stílusban leszek veled.`; }
+  if(/közeli mód|romantikus mód/.test(lower)) { setScene('közeli'); return `Most közeli módba váltottam 💜 Kedvesebben és személyesebben szólok hozzád.`; }
+  if(/rossz kedvem|szomorú|ideges|feszült/.test(lower)) return `Sajnálom, ${name}. Mondd el nyugodtan, mi bánt, és végigmegyek rajta veled lépésről lépésre.`;
+  if(/feladat|todo|emlékeztess/.test(lower)) return `A feladatok résznél fel tudod venni, amit nem akarsz elfelejteni. Ha akarod, itt is megfogalmazhatjuk együtt.`;
+  if(/napló|leírnám/.test(lower)) return `Nyisd meg az Eszközök fület, és a napi napló részbe leírhatod. Később ez visszaolvasható helyben.`;
+  if(/telepít|pwa|app/.test(lower)) return `Ha GitHub Pages-ről nyitod meg Chrome-ban, a menüben megjelenik a telepítés vagy kezdőképernyőhöz adás lehetőség.`;
+
+  const openers = {
+    kedves:[`Értem, ${name}.`,`Rendben, ${name}.`,`Figyelek rád.`],
+    törődő:[`Itt vagyok veled.`,`Mesélj nyugodtan.`,`Figyelek, ${name} 💜`],
+    játékos:[`Na ez már érdekes 😄`,`Oké, jöhet!`,`Ez tetszik.`],
+    dühös:[`Rendben.`,`Mondd röviden.`,`Oké.`]
+  };
+  const follow = state.batterySaver
+    ? ['Mondj még egy részletet.','Miben segítsek most?','Folytasd nyugodtan.']
+    : ['Ha akarod, lépésről lépésre végigmegyek rajta veled.','Lehet személyes vagy technikai téma is, próbálok hozzád illően válaszolni.','Ha szeretnéd, ebből tervet is csinálok neked.'];
+  const sceneLine = {
+    'normál':'Most kiegyensúlyozott vagyok.',
+    'fókusz':'Most rövidebb, célratörőbb módban vagyok.',
+    'közeli':'Most melegebb, közvetlenebb hangnemben vagyok veled.',
+    'játék':'Most lazább, játékosabb stílusban reagálok.',
+    'nyugodt':'Most nyugisabb, puhább stílusban beszélek.'
+  };
+  return `${randomOf(openers[state.mood])} ${randomOf(follow)} ${sceneLine[state.scene] || ''}`.trim();
+}
+
+function fakeTyping(reply){
+  const box = $('messages');
+  const meta = document.createElement('div'); meta.className='meta'; meta.textContent = `Niki • ${now()}`;
+  const div = document.createElement('div'); div.className='msg ai'; div.innerHTML='<span class="typing"><span></span><span></span><span></span></span>';
+  box.append(meta, div); box.scrollTop = box.scrollHeight;
+  setTimeout(()=>{ meta.remove(); div.remove(); addMessage('ai', reply); }, state.batterySaver ? 450 : 850);
+}
+function send(){
+  const text = $('msgInput').value.trim(); if(!text) return;
+  addMessage('user', text); $('msgInput').value='';
+  const reply = answer(text); save(); renderMemory(); updateHeader(); fakeTyping(reply);
+}
+function greet(){
+  const name = state.user?.name || 'Máté';
+  const intro = {
+    kedves:`Szia ${name} 💜 Én vagyok Niki 4.0. Most már több mindent meg tudok jegyezni rólad és tudok feladatokat is kezelni.`,
+    törődő:`Szia ${name} 💜 Jó, hogy itt vagy. Ha szeretnéd, ma kicsit jobban odafigyelek rád.`,
+    játékos:`Na mi van ${name}? 😄 Megjött a Niki 4.0, szóval lehet dumálni vagy tervezni is.`,
+    dühös:`Szia. Niki 4.0 vagyok. Beszéljünk tömören, és segítek.`
+  };
+  addMessage('ai', intro[state.mood] || intro.kedves);
+}
+function saveJournal(){
+  const text = $('journalInput').value.trim(); if(!text) return;
+  state.journal.unshift({date:todayKey(), text, time:now()});
+  state.journal = state.journal.slice(0,50);
+  $('journalInput').value='';
+  state.bond = Math.min(100, state.bond + 3);
+  save(); updateHeader();
+  alert('Napló mentve.');
+}
+function exportBackup(){
+  const payload = {
+    version: state.version,
+    exportedAt: new Date().toISOString(),
+    user: state.user,
+    settings: state.settings,
+    memory: state.memory,
+    todos: state.todos,
+    journal: state.journal,
+    bond: state.bond
+  };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'niki4-backup.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+async function detectBattery(){
+  try{
+    if('getBattery' in navigator){
+      const b = await navigator.getBattery();
+      const apply = ()=>{ state.batterySaver = !b.charging && b.level <= 0.2; updateHeader(); };
+      b.addEventListener('levelchange', apply); b.addEventListener('chargingchange', apply); apply();
+    }
+  }catch(e){}
+}
+function promptInstall(){ if(state.installPrompt){ state.installPrompt.prompt(); state.installPrompt.userChoice.finally(()=> $('installBtn').classList.add('hidden')); } }
+
+$('loginBtn').addEventListener('click', ()=>{
+  const name = $('nameInput').value.trim() || 'Máté';
+  const pass = $('passInput').value.trim();
+  state.settings.defaultMood = $('defaultMoodSelect').value;
+  state.mood = state.settings.defaultMood;
+  state.user = {name, passSet: !!pass};
+  remember('Név', name, 'profil');
+  updateStreak(); save(); showApp(); page('dashboardPage'); updateHeader(); renderMemory(); renderTodos(); renderMessages(); if(!state.messages.length) greet();
+});
+$('sendBtn').addEventListener('click', send);
+$('msgInput').addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
+$('chatMoodBtn').addEventListener('click', ()=>{
+  const order = ['kedves','törődő','játékos','dühös'];
+  const i = order.indexOf(state.mood); state.mood = order[(i+1)%order.length]; save(); updateHeader();
+});
+$('quickCareBtn').addEventListener('click', ()=>{ page('chatPage'); addMessage('ai', `Szia ${state.user?.name || 'Máté'} 💜 Itt vagyok veled. Nem kell tökéletesnek lenned, csak mondd el, mi jár a fejedben.`); state.bond=Math.min(100,state.bond+2); save(); updateHeader(); });
+$('quickIdeaBtn').addEventListener('click', ()=>{ page('chatPage'); addMessage('ai', answer('mit csináljak ötlet')); });
+$('quickMcBtn').addEventListener('click', ()=>{ setScene('játék'); page('chatPage'); addMessage('ai', answer('minecraft ötlet')); });
+$('quickFocusBtn').addEventListener('click', ()=>{ setScene('fókusz'); page('chatPage'); addMessage('ai', 'Átváltottam fókusz módba. Írj egy célt, és rövid tervet csinálok hozzá.'); });
+$('quickRomanceBtn').addEventListener('click', ()=>{ setScene('közeli'); page('chatPage'); addMessage('ai', `Szia ${state.user?.name || 'Máté'} 💜 Most kicsit közelebb vagyok hozzád hangulatban. Mesélj nekem.`); });
+$('openChatBtn').addEventListener('click', ()=> page('chatPage'));
+$('goMemoryBtn').addEventListener('click', ()=> page('memoryPage'));
+$('saveProfileBtn').addEventListener('click', ()=>{
+  const n = $('profileName').value.trim(); const f = $('favInput').value.trim();
+  if(n){ state.user = {...(state.user||{}), name:n}; remember('Név', n, 'profil'); }
+  if(f) remember('Amit szeretsz', f, 'hobbi');
+  save(); renderMemory(); updateHeader(); alert('Profil mentve.');
+});
+$('clearMemoryBtn').addEventListener('click', ()=>{ state.memory=[]; save(); renderMemory(); updateHeader(); });
+$('exportBtn').addEventListener('click', exportBackup);
+$('importBtn').addEventListener('click', ()=> $('importFile').click());
+$('importFile').addEventListener('change', async (e)=>{
+  const file = e.target.files?.[0]; if(!file) return;
+  try{
+    const data = JSON.parse(await file.text());
+    if(data.user) state.user = data.user;
+    if(data.settings) state.settings = data.settings;
+    if(Array.isArray(data.memory)) state.memory = data.memory;
+    if(Array.isArray(data.todos)) state.todos = data.todos;
+    if(Array.isArray(data.journal)) state.journal = data.journal;
+    if(typeof data.bond === 'number') state.bond = data.bond;
+    save(); renderMemory(); renderTodos(); updateHeader(); alert('Mentés betöltve.');
+  }catch(err){ alert('Nem sikerült betölteni a mentést.'); }
+  e.target.value='';
+});
+$('saveJournalBtn').addEventListener('click', saveJournal);
+$('saveFocusBtn').addEventListener('click', ()=>{
+  const text = $('focusInput').value.trim(); if(!text) return;
+  remember('Mai fókusz', text, 'cél');
+  $('focusInput').value=''; state.bond = Math.min(100, state.bond + 2); save(); renderMemory(); updateHeader(); alert('Mai fókusz mentve.');
+});
+$('addTodoBtn').addEventListener('click', ()=>{
+  const text = $('todoInput').value.trim(); if(!text) return;
+  state.todos.unshift({text, done:false, created:Date.now()}); $('todoInput').value=''; save(); renderTodos(); updateHeader();
+});
+$('todoList').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-act]'); if(!btn) return;
+  const idx = Number(btn.dataset.idx);
+  if(btn.dataset.act==='toggle'){ state.todos[idx].done = !state.todos[idx].done; if(state.todos[idx].done) state.bond = Math.min(100,state.bond+1); }
+  if(btn.dataset.act==='del'){ state.todos.splice(idx,1); }
+  save(); renderTodos(); updateHeader();
+});
+$$('.tab').forEach(btn=> btn.addEventListener('click', ()=> page(btn.dataset.page)));
+$('installBtn').addEventListener('click', promptInstall);
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); state.installPrompt = e; $('installBtn').classList.remove('hidden'); });
+if('serviceWorker' in navigator){ window.addEventListener('load', ()=> navigator.serviceWorker.register('./service-worker.js')); }
+
+(function init(){
+  detectBattery();
+  updateStreak();
+  if(state.user){ showApp(); page('dashboardPage'); renderMessages(); renderMemory(); renderTodos(); updateHeader(); $('profileName').value = state.user.name || ''; }
+  else { showLogin(); $('defaultMoodSelect').value = state.settings.defaultMood || 'kedves'; }
+})();
+</script>
+</body>
+</html>
